@@ -9,7 +9,7 @@ RUN npm install
 # Copy source code
 COPY . .
 RUN mkdir -p data
-RUN node src/generateData.js
+RUN node src/generator.cjs
 
 # Start the server
 CMD ["node", "src/server.js"]
