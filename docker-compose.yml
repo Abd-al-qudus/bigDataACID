@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bigdata_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: bigdata_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data:/data  # Mounts your local 'data' folder to '/data' inside container
+
+  api:
+    build: .
+    container_name: bigdata_api
+    restart: always
+    ports:
+      - "3500:3500"
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASS: password123
+      DB_NAME: bigdata_db
+    depends_on:
+      - db
+    volumes:
+      - ./src:/app/src # Hot reload: changes in src reflect immediately
+
+volumes:
+  postgres_data:
