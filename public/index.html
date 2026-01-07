@@ -29,9 +29,25 @@
 
         .container { max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; height: 100%; }
 
-        header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
-        h1 { margin-bottom: 10px; color: #1e293b; }
-        p { color: var(--text-muted); }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            flex-shrink: 0; 
+        }
+        
+        h1 { margin: 0; color: #1e293b; font-size: 1.8rem; }
+        .header-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .header-btn:hover { opacity: 0.9; }
 
         /* Comparison Grid */
         .comparison-grid {
@@ -74,22 +90,20 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             display: flex;
             flex-direction: column;
-            flex: 1; /* Takes remaining height */
+            flex: 1; 
             min-height: 400px;
-            overflow: hidden; /* Prevents outer scroll */
+            overflow: hidden; 
         }
 
         .table-header { padding: 20px; border-bottom: 1px solid #e2e8f0; background: #fff; z-index: 10; }
 
-        /* The scrollable area */
         .table-scroll-area {
             flex: 1;
-            overflow-y: auto; /* Enables vertical scrolling */
+            overflow-y: auto;
             position: relative;
         }
 
         table { width: 100%; border-collapse: collapse; }
-        /* Sticky Header for the Table */
         thead th { 
             position: sticky; 
             top: 0; 
@@ -104,18 +118,49 @@
             text-align: center;
             padding: 20px;
             color: var(--text-muted);
-            font-style: italic;
             display: none;
         }
         .loading-indicator.active { display: block; }
+
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancel { background: #e2e8f0; color: var(--text-main); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>BigDataACID ⚡</h1>
-        <p>Infinite Scroll Demo | 2 Million Records</p>
+        <div>
+            <h1>BigDataACID ⚡</h1>
+            <p>10 Million Records | Full Text Search</p>
+        </div>
+        <button class="header-btn" onclick="openModal()">+ Add Employee</button>
     </header>
 
     <div class="comparison-grid">
@@ -125,7 +170,7 @@
                 <span class="badge badge-slow">Seq Scan</span>
             </div>
             <div class="input-group">
-                <input type="text" id="input-bad" placeholder="Search Firstname...">
+                <input type="text" id="input-bad" placeholder="Search any field...">
                 <button class="btn-bad" onclick="performSearch('unoptimized')">Search</button>
             </div>
             <div class="metrics">
@@ -140,7 +185,7 @@
                 <span class="badge badge-fast">Index Scan</span>
             </div>
             <div class="input-group">
-                <input type="text" id="input-good" placeholder="Search Firstname...">
+                <input type="text" id="input-good" placeholder="Search any field...">
                 <button class="btn-good" onclick="performSearch('optimized')">Search</button>
             </div>
             <div class="metrics">
@@ -161,18 +206,67 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
+                        <th>Name</th>
                         <th>Department</th>
+                        <th>Role</th>
+                        <th>Hostel</th>
                         <th>Salary</th>
-                        <th>Service</th>
                     </tr>
                 </thead>
-                <tbody id="table-body">
-                    </tbody>
+                <tbody id="table-body"></tbody>
             </table>
             <div id="loader" class="loading-indicator">Loading more employees...</div>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <h2 style="margin-top:0">Add New Employee</h2>
+        <form id="addForm" onsubmit="saveEmployee(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" name="firstname" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="lastname" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="dob" required>
+                </div>
+                <div class="form-group">
+                    <label>SSN</label>
+                    <input type="text" name="ssn" placeholder="XXX-XX-XXXX" required>
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" name="department" required>
+                </div>
+                <div class="form-group">
+                    <label>Designation</label>
+                    <input type="text" name="designation" required>
+                </div>
+                <div class="form-group">
+                    <label>Hostel Room</label>
+                    <input type="text" name="hostel_room" required>
+                </div>
+                <div class="form-group">
+                    <label>Salary</label>
+                    <input type="number" name="salary" required>
+                </div>
+                <div class="form-group">
+                    <label>Years Service</label>
+                    <input type="number" name="years_of_service" required>
+                </div>
+                </div>
+            <div class="modal-actions">
+                <button type="button" class="header-btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="header-btn">Save Employee</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -180,40 +274,66 @@
     let currentPage = 1;
     let isFetching = false;
     let hasMore = true;
-    let isSearchMode = false; // Disable infinite scroll during search for simplicity
+    let isSearchMode = false;
+    // NOTE: Ensure this matches your Docker port (3500)
+    const API_URL = 'http://localhost:3500'; 
 
-    // 1. Initial Load
     window.addEventListener('DOMContentLoaded', () => {
         loadData();
-        
-        // Attach Scroll Listener
         const container = document.getElementById('scroll-container');
         container.addEventListener('scroll', handleScroll);
     });
 
-    // 2. Infinite Scroll Logic
-    function handleScroll() {
-        if (isSearchMode) return; // Don't infinite scroll search results in this demo
-        
-        const container = document.getElementById('scroll-container');
-        const { scrollTop, scrollHeight, clientHeight } = container;
+    // --- MODAL FUNCTIONS ---
+    function openModal() { document.getElementById('addModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
 
-        // If user is within 50px of the bottom, load more
-        if (scrollTop + clientHeight >= scrollHeight - 50) {
+    async function saveEmployee(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Generate a random ID (High range to avoid collision in this demo)
+        data.id = Math.floor(Math.random() * 10000000) + 10000000;
+        data.salary = parseInt(data.salary);
+        data.years_of_service = parseInt(data.years_of_service);
+
+        try {
+            const res = await fetch(`${API_URL}/api/employees`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('Employee Added! Search for them to test index.');
+                closeModal();
+                e.target.reset();
+            } else {
+                alert('Error saving employee');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to connect to server');
+        }
+    }
+
+    // --- SEARCH & DATA FUNCTIONS ---
+    function handleScroll() {
+        if (isSearchMode) return;
+        const container = document.getElementById('scroll-container');
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
             loadData();
         }
     }
 
-    // 3. Data Fetcher (Append Mode)
     async function loadData() {
         if (isFetching || !hasMore) return;
-
         isFetching = true;
         document.getElementById('loader').classList.add('active');
 
         try {
-            const response = await fetch(`http://localhost:3500/api/employees?page=${currentPage}`);
-            console.log(response);
+            const response = await fetch(`${API_URL}/api/employees?page=${currentPage}`);
             const data = await response.json();
 
             if (data.result.length === 0) {
@@ -222,7 +342,8 @@
             } else {
                 appendRows(data.result);
                 currentPage++;
-                document.getElementById('status-text').innerText = `Showing ${currentPage * 50} records...`;
+                const totalRows = document.getElementById('table-body').children.length;
+                document.getElementById('status-text').innerText = `Showing ${totalRows} records...`;
             }
         } catch (err) {
             console.error(err);
@@ -232,32 +353,27 @@
         }
     }
 
-    // 4. Search Handler (Replace Mode)
     async function performSearch(type) {
-        isSearchMode = true; // Stop infinite scroll
-        currentPage = 1;     // Reset
-        
+        isSearchMode = true; 
+        currentPage = 1;
         const inputId = type === 'unoptimized' ? 'input-bad' : 'input-good';
         const query = document.getElementById(inputId).value;
         if (!query) return alert("Enter search term");
 
-        document.getElementById('table-body').innerHTML = ''; // Clear table
-        document.getElementById('status-text').innerText = "Searching...";
+        document.getElementById('table-body').innerHTML = ''; 
+        document.getElementById('status-text').innerText = "Searching entire database...";
 
         try {
-            const response = await fetch(`http://localhost:3500/api/search/${type}?q=${query}`);
+            const response = await fetch(`${API_URL}/api/search/${type}?q=${encodeURIComponent(query)}`);
             const data = await response.json();
 
-            // Update Metrics
             document.getElementById(`time-${type}`).innerText = data.metrics.executionTime;
             document.getElementById(`count-${type}`).innerText = data.metrics.count;
 
-            // Render Results
             appendRows(data.result);
-            document.getElementById('status-text').innerText = `Search found ${data.metrics.count} results.`;
-
+            document.getElementById('status-text').innerText = `Found ${data.metrics.count} results.`;
         } catch (error) {
-            alert('Search failed');
+            alert('Search failed. Ensure backend supports "All Fields" search.');
         }
     }
 
@@ -269,15 +385,14 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${emp.id}</td>
-                <td>${emp.firstname}</td>
-                <td>${emp.lastname}</td>
+                <td>${emp.firstname} ${emp.lastname}</td>
                 <td>${emp.department}</td>
+                <td>${emp.designation}</td>
+                <td>${emp.hostel_room}</td>
                 <td>$${emp.salary.toLocaleString()}</td>
-                <td>${emp.years_of_service}</td>
             `;
             fragment.appendChild(tr);
         });
-        
         tbody.appendChild(fragment);
     }
 </script>
